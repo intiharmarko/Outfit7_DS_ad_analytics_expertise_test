@@ -83,9 +83,15 @@ df.rez <- map_dfr(seq_len(nr_orders), function(row_i){
   mutate(ER_emp_sim_rank = row_number())
 
 
+# Determine best order based on smart sort
+# - smart sort logic:
+#   - in this setup (no per-query cost, ad shown immediately on first success),
+#   - the optimal order is simply to sort companies by revenue per impression (r) in descending order.
+#   - proof: comparing two companies i and j, the difference in expected revenue depends only on (r_i - r_j),
+#   - so higher revenue must always come first, regardless of fill rate
 
-
-
+add_smart_sort_best_order <- function(df.comp_ = df.comp,
+                                      )
 
 
 df.comp <- df.comp %>%
@@ -97,10 +103,14 @@ smart_ord <- df.comp %>%
 
 smart_sort <- paste(smart_ord, collapse = " > ")
 
-results <- results %>%
-  mutate(
-    smart_sort = smart_sort
-  )
+
+df.rez <- df.rez %>% 
+  mutate(ER_smart_sort_best = if_else(order_ids == smart_sort, 1, 0))
+
+
+
+
+
 
 library(patchwork)
 
