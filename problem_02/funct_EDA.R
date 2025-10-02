@@ -252,7 +252,8 @@ plot_instances_count <- function(df.merged_,
     ggplot(aes(x = nr_rows,
                fill = source)) +
     geom_histogram(binwidth = 1,
-                   color = "black") +
+                   color = "black", 
+                   show.legend = F) +
     facet_wrap(vars(source)) +
     scale_fill_manual(values = cols_sources_) +
     xlab("Number of instances") +
@@ -262,9 +263,3 @@ plot_instances_count <- function(df.merged_,
          fill = "Source:") +
     theme_minimal(base_size = font_base_size)
 }
-
-
-
-
-
-
