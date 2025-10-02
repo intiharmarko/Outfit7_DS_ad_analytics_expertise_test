@@ -174,3 +174,13 @@ plot_instances_count(df.c.merged); export_fig("04_intances_counts.png", path_fig
 ### aggregate data on primary key level
 ### - and re-calculate violations flags and metrics
 ### - repeat visualizations
+df.c.merged.aggr <- aggregate_df(df.c.merged)
+  
+### visualize logical consistency checks results (aggregated data)
+plot_logical_consistency(df.c.merged.aggr); export_fig("04_aggr_violation_flags.png", path_fig)
+
+### visualize distribution for fill rate break down by source (aggregated data)
+plot_distr_fill_rate(df.c.merged.aggr); export_fig("04_aggr_fill_rate_distr.png", path_fig)
+
+### visualize distribution for eCPM rate break down by source (aggregated data)
+plot_distr_eCPM(df.c.merged.aggr); export_fig("04_aggr_fill_eCPM.png", path_fig)

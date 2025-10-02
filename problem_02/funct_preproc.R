@@ -249,3 +249,31 @@ add_instances_counts <- function(df_){
 
 
 
+#' Aggregate data & recalculate flags and metrics
+#'
+#' We aggregate numeric columns on:
+#' - source ~ date ~ app ~ platform level
+#' - also we re-calculate violation flags and metrices
+#' 
+#' @param df_ A data frame - imported or merged df.
+#' 
+#' @return df_ A data frame - aggregated.
+#'
+aggregate_df <- function(df_){
+  
+  df_ <- df_ %>% 
+    group_by(source, date, app, platform, currency) %>% 
+    summarise(requests = sum(requests),
+              impressions = sum(impressions),
+              revenue = sum(revenue), 
+              .groups = "drop") %>% 
+    mutate(`f: impressions > requests` = if_else(impressions > requests, 1, 0),
+           `f: requests < 0`           = if_else(requests < 0, 1, 0),
+           `f: impressions < 0`        = if_else(impressions < 0, 1, 0),
+           `f: revenue < 0`            = if_else(revenue < 0, 1, 0)) %>% 
+    mutate(fill_rate = impressions / requests,
+           eCPM = revenue / impressions * 100) %>% 
+    select(everything(), currency)  
+    
+  return(df_)
+}
