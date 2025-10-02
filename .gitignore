@@ -1,0 +1,17 @@
+# Folders
+/test_desc*
+/ppt*
+
+# R based files
+*.Rproj
+*.Rproj.user
+*.Rhistory
+*.RData
+*.Ruserdata
+
+# Figures
+*.png
+
+# Flat files
+*.csv
+*.txt
