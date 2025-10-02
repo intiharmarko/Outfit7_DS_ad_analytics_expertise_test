@@ -88,7 +88,7 @@ cols_types <- function(df_,
 }
 
 
-#' Report missign rows
+#' Report missing rows
 #'
 #' Count number of missing rows per each column in df and report it.
 #' 
@@ -108,6 +108,29 @@ rows_missing <- function(df_,
   cat("\n-----------------------")
   cat(paste0("\nNumber of missign rows per column - data frame (", data_name_,")"))
   print(df_missing)
+}
+
+
+#' Report number of duplicates
+#'
+#' Count number of rows that are identical (at least two rows must be identical).
+#' 
+#' @param df_ A data frame - imported df.
+#' @param data_name_ A string - name of the imported dataset.
+#' 
+#' @return NULL
+#'
+duplicates_count <- function(df_,
+                             data_name_){
+  
+  nr_duplicates <- df.au_170915 %>% 
+    group_by(across(everything())) %>%
+    filter(n() > 1) %>%
+    ungroup() %>% 
+    nrow()
+  
+  cat("\n-----------------------")
+  cat(paste0("\nNumber of duplicates (rows) - data frame (", data_name_,"): ", nr_duplicates))
 }
 
 
@@ -199,4 +222,30 @@ calc_metrics <- function(df_){
   return(df_)
 }
 
+
+
+#' Count number of instances
+#'
+#' We count rows per selected primary key (source ~ date ~ app ~ platform)
+#' - first group by per key
+#' - then we add row id and row counts
+#' 
+#' @param df_ A data frame - imported or merged df.
+#' 
+#' @return df_ A data frame - with counts added.
+#'
+add_instances_counts <- function(df_){
   
+  df_ <- df_ %>% 
+    select(source:currency) %>% 
+    arrange(source, date, app, platform) %>% 
+    group_by(source, date, app, platform) %>% 
+    mutate(row_id = row_number(),
+           nr_rows = n()) %>% 
+    ungroup()
+  
+  return(df_)
+}
+
+
+

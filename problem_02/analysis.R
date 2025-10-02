@@ -12,10 +12,14 @@ graphics.off()
 library(tidyverse)
 
 # Load custom functions
-source("./problem_02/functions.R")
+source("./problem_02/funct_preproc.R")
+source("./problem_02/funct_EDA.R")
+source("./problem_02/funct_EDA_settings.R")
+
 
 # Paths
 path_data <- "./problem_02/data/"
+path_fig  <- "./problem_02/fig/"
 
 
 
@@ -46,6 +50,7 @@ df.au_170916 <- read_csv(file = paste0(path_data, file_au_170916), col_names = T
 # - check column types (any strange column types)
 # - check missing rows
 # - (check any strange rows (that do not follow the structure of other rows))
+# - check for duplicates 8identical rows
 
 
 ## column names - match test
@@ -77,6 +82,11 @@ rows_missing(df.au_170916, "AdUmbrella (AU) - 2017-09-16")
 df.au_170915 %>% filter(if_any(everything(), is.na))
 df.au_170916 %>% filter(if_any(everything(), is.na))
 
+### check duplicates (identical rows)
+duplicates_count(df.sn_170915, "SuperNetwork (SN) - 2017-09-15")
+duplicates_count(df.sn_170916, "SuperNetwork (SN) - 2017-09-16")
+duplicates_count(df.au_170915, "AdUmbrella (AU) - 2017-09-15")
+duplicates_count(df.au_170916, "AdUmbrella (AU) - 2017-09-16")
 
 
 # Data pre-processing (before main EDA)
@@ -127,32 +137,13 @@ df.c.merged <- logical_consis_checks(df.c.merged)
 
 ### visualize logical consistency checks results
 ### - we show number of violations per each df
-df.c.merged %>% 
-  group_by(source) %>% 
-  summarise(`nr: impressions > requests` = sum(`f: impressions > requests`),
-            `nr: requests < 0`           = sum(`f: requests < 0`),
-            `nr: impressions < 0`        = sum(`f: impressions < 0`),
-            `nr: revenue < 0`            = sum(`f: revenue < 0`), 
-            .groups = "drop") %>% 
-  pivot_longer(!source, 
-               names_to = "violation", 
-               values_to = "count") %>% 
-  ggplot(aes(x = violation, 
-             y = count, 
-             fill = source)) +
-  geom_col(color = "black", 
-           show.legend = F) +
-  facet_grid(rows = vars(source)) +
-  xlab("Logical violation") +
-  ylab("Number of violations") +
-  ggtitle("Logical inconsistency violations check") +
-  labs(subtitle = "Counts above 0 show violations (values that shouldn't exist)!") +
-  theme_minimal(base_size = 16)
+plot_logical_consistency(df.c.merged); export_fig("02_violation_flags.png", path_fig)
+
 
 
 ## Metrics check
 ## - first we calculate two additional metrics:
-##   - effective cost per mille (eCPM)
+##   - effective Cost Per Mille (eCPM)
 ##   - fill rate
 ## - then we visualize both distributions and check for potential anomalies
 
@@ -160,34 +151,10 @@ df.c.merged %>%
 df.c.merged <- calc_metrics(df.c.merged)
 
 ### visualize distribution for fill rate break down by source
-df.c.merged %>% 
-  ggplot(aes(x = fill_rate,
-             fill = source)) +
-  geom_density(color = "black") +
-  facet_wrap(vars(source)) +
-  xlab("Fill rate (impressions / requests)") +
-  ylab("Density") +
-  ggtitle("Fill rate distribution break down by source") +
-  labs(subtitle = "Fill rate should have values on the range [0,1]!",
-       fill = "Source:") +
-  theme_minimal(base_size = 16)
+plot_distr_fill_rate(df.c.merged); export_fig("03_fill_rate_distr.png", path_fig)
 
 ### visualize distribution for eCPM rate break down by source
-df.c.merged %>% 
-  ggplot(aes(x = eCPM,
-             fill = source)) +
-  geom_density(color = "black") +
-  geom_text(aes(label = currency, 
-                x = 0.5, 
-                y = 0.5), 
-            size = 16) +
-  facet_wrap(vars(source)) +
-  xlab("Fill rate (impressions / requests)") +
-  ylab("Density") +
-  ggtitle("Effective Cost per Mille distribution break down by source") +
-  labs(subtitle = "eCPM = revenue / impressions * 100\nCurrency shown on the graph!",
-       fill = "Source:") +
-  theme_minimal(base_size = 16)
+plot_distr_eCPM(df.c.merged); export_fig("03_fill_eCPM.png", path_fig)
 
 
 ## Check duplicates & aggregates
@@ -199,32 +166,11 @@ df.c.merged %>%
 ## - and we will repeat previous two EDA steps for aggregates
 
 ### count rows per selected primary key (source ~ date ~ app ~ platform)
-df.c.merged <- df.c.merged %>% 
-  select(source:currency) %>% 
-  arrange(source, date, app, platform) %>% 
-  group_by(source, date, app, platform) %>% 
-  mutate(row_id = row_number(),
-         nr_rows = n()) %>% 
-  ungroup()
+df.c.merged <- add_instances_counts(df.c.merged)
 
 ### visualize counts
-df.c.merged %>% 
-  distinct(source, date, app, platform, nr_rows) %>% 
-  ggplot(aes(x = nr_rows,
-             fill = source)) +
-  geom_histogram(binwidth = 1,
-                 color = "black") +
-  facet_wrap(vars(source)) +
-  xlab("Number of instances") +
-  ylab("Frequency") +
-  ggtitle("Number of multiple instances per selected primary key") +
-  labs(subtitle = "Selected primary key: source ~ date ~ app ~ platform\nMore than 1 instance probably indicates we don't see full primary key,\nor we have duplicate values.",
-       fill = "Source:") +
-  theme_minimal(base_size = 16)
+plot_instances_count(df.c.merged); export_fig("04_intances_counts.png", path_fig)
 
-### check duplicates over all relevant columns
-df.c.merged %>% 
-  group_by(source, date, app, platform, requests, impressions, revenue, currency) %>% 
-  summarise(n = n(), .groups = "drop") %>% 
-  filter(n > 1) %>% 
-  nrow()
+### aggregate data on primary key level
+### - and re-calculate violations flags and metrics
+### - repeat visualizations

@@ -16,3 +16,4 @@
 # Flat files
 *.csv
 *.txt
+.Rproj.user
