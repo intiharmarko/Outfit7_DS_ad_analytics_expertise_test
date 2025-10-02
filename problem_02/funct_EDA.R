@@ -5,11 +5,104 @@ require(tidyverse)
 
 
 
+#' Visualize bar plot of selected categorical column.
+#' 
+#' 
+#' @param df.merged_ A data frame - all sources merged.
+#' @param col A column / variable for which we draw bar plot.
+#' @param col_name A string of column / variable name shown on the plot.
+#' @param cols_sources_ A vector of color names (data sources).
+#' @param font_base_size_ An integer - base font size on the plot. 
+#' @param log_scale_ A logical - TRUE (apply log10 scaling) | FALSE (do not apply log10 scaling). 
+#'
+#' @return None
+#'
+plot_cat_var_bar <- function(df.merged_,
+                             col,
+                             col_name,
+                             cols_sources_ = cols_sources,
+                             font_base_size_ = font_base_size,
+                             log_scale_ = T){
+  
+  df.merged_ %>% 
+    group_by(source, {{ col }}) %>% 
+    summarise(n = n(), 
+              .groups = "drop") %>% 
+    ggplot(aes(x = {{ col }},
+               y = n,
+               fill = source)) +
+    geom_col(color = "black", 
+             show.legend = F) + 
+    facet_grid(cols = vars(source)) +
+    scale_fill_manual(values = cols_sources_) +
+    xlab(ensym(col_name)) +
+    ylab("Frequency (row counts)") +
+    ggtitle(paste("Distribution of", ensym(col_name))) +
+    theme_minimal(base_size = font_base_size_) +
+    theme(axis.text.x = element_text(angle = 90))
+}
+
+
+#' Visualize density plot of selected numeric (float) column.
+#' 
+#' @param df.merged_ A data frame - all sources merged.
+#' @param col A column / variable for which we draw density plot.
+#' @param col_name A string of column / variable name shown on the plot.
+#' @param cols_sources_ A vector of color names (data sources).
+#' @param font_base_size_ An integer - base font size on the plot. 
+#' @param log_scale_ A logical - TRUE (apply log10 scaling) | FALSE (do not apply log10 scaling). 
+#'
+#' @return None
+#'
+plot_num_var_density <- function(df.merged_,
+                                 col,
+                                 col_name,
+                                 cols_sources_ = cols_sources,
+                                 font_base_size_ = font_base_size,
+                                 log_scale_ = T){
+
+  
+  # create plot (with or without log10 scaling)
+  if(log_scale_ == T){
+    
+    df.merged_ %>% 
+      ggplot(aes(x = {{ col }},
+                 fill = source)) +
+      geom_density(color = "black", 
+                   show.legend = F) + 
+      scale_x_log10() +
+      facet_grid(rows = vars(source)) +
+      scale_fill_manual(values = cols_sources_) +
+      xlab(paste0(ensym(col_name), " - log10 scale")) +
+      ylab("Density") +
+      ggtitle(paste("Distribution of", ensym(col_name))) +
+      theme_minimal(base_size = font_base_size_)
+    
+  } else if(log_scale_ == F){
+    df.merged_ %>% 
+      ggplot(aes(x = {{ col }},
+                 fill = source)) +
+      geom_density(color = "black", 
+                   show.legend = F) + 
+      facet_grid(rows = vars(source)) +
+      scale_fill_manual(values = cols_sources_) +
+      xlab(paste0(ensym(col_name))) +
+      ylab("Density") +
+      ggtitle(paste("Distribution of", ensym(col_name))) +
+      theme_minimal(base_size = font_base_size_)
+    
+  } else{
+    message("Please provide boolean value for parameter parameter 'log_scale_'!")
+  }
+}
+
+
+
 #' Visualize logical consistency checks results
 #' - number of violations per each source
 #' 
 #' @param df.merged_ A data frame - all sources merged.
-#' @param cols_sources A vector of color names (data sources).
+#' @param cols_sources_ A vector of color names (data sources).
 #' @param font_base_size_ An integer - base font size on the plot. 
 #'
 #' @return None
@@ -48,7 +141,7 @@ plot_logical_consistency <- function(df.merged_,
 #' - break down by source
 #' 
 #' @param df.merged_ A data frame - all sources merged.
-#' @param cols_sources A vector of color names (data sources).
+#' @param cols_sources_ A vector of color names (data sources).
 #' @param font_base_size_ An integer - base font size on the plot. 
 #'
 #' @return None
@@ -77,7 +170,7 @@ plot_distr_fill_rate <- function(df.merged_,
 #' - break down by source
 #' 
 #' @param df.merged_ A data frame - all sources merged.
-#' @param cols_sources A vector of color names (data sources).
+#' @param cols_sources_ A vector of color names (data sources).
 #' @param font_base_size_ An integer - base font size on the plot. 
 #'
 #' @return None
@@ -111,7 +204,7 @@ plot_distr_eCPM <- function(df.merged_,
 #' - break down by source
 #' 
 #' @param df.merged_ A data frame - all sources merged.
-#' @param cols_sources A vector of color names (data sources).
+#' @param cols_sources_ A vector of color names (data sources).
 #' @param font_base_size_ An integer - base font size on the plot. 
 #'
 #' @return None
@@ -145,7 +238,7 @@ plot_distr_eCPM <- function(df.merged_,
 #' - break down by source
 #' 
 #' @param df.merged_ A data frame - all sources merged.
-#' @param cols_sources A vector of color names (data sources).
+#' @param cols_sources_ A vector of color names (data sources).
 #' @param font_base_size_ An integer - base font size on the plot. 
 #'
 #' @return None

@@ -50,7 +50,7 @@ df.au_170916 <- read_csv(file = paste0(path_data, file_au_170916), col_names = T
 # - check column types (any strange column types)
 # - check missing rows
 # - (check any strange rows (that do not follow the structure of other rows))
-# - check for duplicates 8identical rows
+# - check for duplicates (identical rows)
 
 
 ## column names - match test
@@ -119,11 +119,31 @@ df.c.merged <- list(SuperNetwork_170915 = df.sn_170915.c,
 
 # EDA main
 # - Split into multiple steps:
+#   - variable(column) distributions
 #   - logical consistency check
 #   - metrics
 #   - check duplicates & aggregates
 #   - cross-day analysis
 #   - cross-network analysis
+
+## Variable distributions
+## - check distribution of each variable
+## - break down by source
+
+### variable "app"
+plot_cat_var_bar(df.merged_ = df.c.merged, col = app, col_name = "Application"); export_fig("01_app_distr.png", path_fig)
+
+### variable "platform"
+plot_cat_var_bar(df.merged_ = df.c.merged, col = platform, col_name = "Platform"); export_fig("01_platform_distr.png", path_fig)
+
+### variable "requests"
+plot_num_var_density(df.merged_ = df.c.merged, col = requests, col_name = "Requests", log_scale_ = T); export_fig("01_requests_distr.png", path_fig)
+
+### variable "impressions"
+plot_num_var_density(df.merged_ = df.c.merged, col = impressions, col_name = "Impressions", log_scale_ = T); export_fig("01_impressions_distr.png", path_fig)
+
+### variable "revenue"
+plot_num_var_density(df.merged_ = df.c.merged, col = revenue, col_name = "Revenue (different currencies)", log_scale_ = T); export_fig("01_revenue_distr.png", path_fig)
 
 
 ## Logical consistency check
