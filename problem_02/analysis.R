@@ -111,15 +111,18 @@ df.c.merged <- list(SuperNetwork_170915 = df.sn_170915.c,
 # - Split into multiple steps:
 #   - logical consistency check
 #   - metrics
-#   - check duplicates
+#   - check duplicates & aggregates
 #   - cross-day analysis
 #   - cross-network analysis
 
-## logical consistency check
+
+## Logical consistency check
 ## - inspect logical violations for requests, impressions and revenues
 ## - and flag violations
 ## - first we calculate flags for each df
 ## - then we create summary of violation results
+
+### add flags
 df.c.merged <- logical_consis_checks(df.c.merged)
 
 ### visualize logical consistency checks results
@@ -146,3 +149,82 @@ df.c.merged %>%
   labs(subtitle = "Counts above 0 show violations (values that shouldn't exist)!") +
   theme_minimal(base_size = 16)
 
+
+## Metrics check
+## - first we calculate two additional metrics:
+##   - effective cost per mille (eCPM)
+##   - fill rate
+## - then we visualize both distributions and check for potential anomalies
+
+### calculate metrics
+df.c.merged <- calc_metrics(df.c.merged)
+
+### visualize distribution for fill rate break down by source
+df.c.merged %>% 
+  ggplot(aes(x = fill_rate,
+             fill = source)) +
+  geom_density(color = "black") +
+  facet_wrap(vars(source)) +
+  xlab("Fill rate (impressions / requests)") +
+  ylab("Density") +
+  ggtitle("Fill rate distribution break down by source") +
+  labs(subtitle = "Fill rate should have values on the range [0,1]!",
+       fill = "Source:") +
+  theme_minimal(base_size = 16)
+
+### visualize distribution for eCPM rate break down by source
+df.c.merged %>% 
+  ggplot(aes(x = eCPM,
+             fill = source)) +
+  geom_density(color = "black") +
+  geom_text(aes(label = currency, 
+                x = 0.5, 
+                y = 0.5), 
+            size = 16) +
+  facet_wrap(vars(source)) +
+  xlab("Fill rate (impressions / requests)") +
+  ylab("Density") +
+  ggtitle("Effective Cost per Mille distribution break down by source") +
+  labs(subtitle = "eCPM = revenue / impressions * 100\nCurrency shown on the graph!",
+       fill = "Source:") +
+  theme_minimal(base_size = 16)
+
+
+## Check duplicates & aggregates
+## - first we will check if duplicates exists per each source
+## - duplicate row definition: if multiple rows exists for single value source ~ date ~ app ~ platform
+## - we will count how many duplicates (and shown which)
+## - then we will aggregate merge df
+## - and recalculate violation flags and metrics
+## - and we will repeat previous two EDA steps for aggregates
+
+### count rows per selected primary key (source ~ date ~ app ~ platform)
+df.c.merged <- df.c.merged %>% 
+  select(source:currency) %>% 
+  arrange(source, date, app, platform) %>% 
+  group_by(source, date, app, platform) %>% 
+  mutate(row_id = row_number(),
+         nr_rows = n()) %>% 
+  ungroup()
+
+### visualize counts
+df.c.merged %>% 
+  distinct(source, date, app, platform, nr_rows) %>% 
+  ggplot(aes(x = nr_rows,
+             fill = source)) +
+  geom_histogram(binwidth = 1,
+                 color = "black") +
+  facet_wrap(vars(source)) +
+  xlab("Number of instances") +
+  ylab("Frequency") +
+  ggtitle("Number of multiple instances per selected primary key") +
+  labs(subtitle = "Selected primary key: source ~ date ~ app ~ platform\nMore than 1 instance probably indicates we don't see full primary key,\nor we have duplicate values.",
+       fill = "Source:") +
+  theme_minimal(base_size = 16)
+
+### check duplicates over all relevant columns
+df.c.merged %>% 
+  group_by(source, date, app, platform, requests, impressions, revenue, currency) %>% 
+  summarise(n = n(), .groups = "drop") %>% 
+  filter(n > 1) %>% 
+  nrow()

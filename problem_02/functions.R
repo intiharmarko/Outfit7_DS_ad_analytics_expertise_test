@@ -178,4 +178,25 @@ logical_consis_checks <- function(df_){
   return(df_)
 }
 
+
+
+#' Calculate additional metrics
+#'
+#' We add additional metrics
+#' - effective cost per mille (eCPM): what publisher earns per 1,000 impressions shown in their app
+#' - fill rate: ratio between impressions and requests
+#' 
+#' @param df_ A data frame - imported or merged df.
+#' 
+#' @return df_ A data frame - with metrics added.
+#'
+calc_metrics <- function(df_){
+  
+  df_ <- df_ %>% 
+    mutate(fill_rate = impressions / requests,
+           eCPM = revenue / impressions * 100)
+  
+  return(df_)
+}
+
   
