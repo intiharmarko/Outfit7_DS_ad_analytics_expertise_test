@@ -41,7 +41,7 @@ df.au_170916 <- read_csv(file = paste0(path_data, file_au_170916), col_names = T
 
 
 
-# EDA (Initial checks)
+# EDA (Initial structure checks)
 # - do column names match with expected column names
 # - check column types (any strange column types)
 # - check missing rows
@@ -86,6 +86,7 @@ df.au_170916 %>% filter(if_any(everything(), is.na))
 #   - clean revenue column (move currency unit into separate column)
 #   - remove rows with totals 
 #   - convert data column to date type
+# - also we merge all cleaned dfs into a single df 
 
 ## apply cleaning (we create new df instance!)
 df.sn_170915.c <- clean_df(df.sn_170915)
@@ -93,4 +94,55 @@ df.sn_170916.c <- clean_df(df.sn_170916)
 df.au_170915.c <- clean_df(df.au_170915)
 df.au_170916.c <- clean_df(df.au_170916)
 
+## merge dfs
+df.c.merged <- list(SuperNetwork_170915 = df.sn_170915.c,
+                    SuperNetwork_170916 = df.sn_170916.c,
+                    AdUmbrella_170915 = df.au_170915.c,
+                    AdUmbrella_170916 = df.au_170916.c) %>% 
+  bind_rows(.id = "source") %>% 
+  mutate(source = factor(source, levels = c("SuperNetwork_170915", 
+                                            "SuperNetwork_170916", 
+                                            "AdUmbrella_170915", 
+                                            "AdUmbrella_170916")))
+
+
+
+# EDA main
+# - Split into multiple steps:
+#   - logical consistency check
+#   - metrics
+#   - check duplicates
+#   - cross-day analysis
+#   - cross-network analysis
+
+## logical consistency check
+## - inspect logical violations for requests, impressions and revenues
+## - and flag violations
+## - first we calculate flags for each df
+## - then we create summary of violation results
+df.c.merged <- logical_consis_checks(df.c.merged)
+
+### visualize logical consistency checks results
+### - we show number of violations per each df
+df.c.merged %>% 
+  group_by(source) %>% 
+  summarise(`nr: impressions > requests` = sum(`f: impressions > requests`),
+            `nr: requests < 0`           = sum(`f: requests < 0`),
+            `nr: impressions < 0`        = sum(`f: impressions < 0`),
+            `nr: revenue < 0`            = sum(`f: revenue < 0`), 
+            .groups = "drop") %>% 
+  pivot_longer(!source, 
+               names_to = "violation", 
+               values_to = "count") %>% 
+  ggplot(aes(x = violation, 
+             y = count, 
+             fill = source)) +
+  geom_col(color = "black", 
+           show.legend = F) +
+  facet_grid(rows = vars(source)) +
+  xlab("Logical violation") +
+  ylab("Number of violations") +
+  ggtitle("Logical inconsistency violations check") +
+  labs(subtitle = "Counts above 0 show violations (values that shouldn't exist)!") +
+  theme_minimal(base_size = 16)
 

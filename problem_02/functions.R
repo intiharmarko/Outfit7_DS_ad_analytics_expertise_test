@@ -152,4 +152,30 @@ clean_df <- function(df_){
   return(df_)
 }
 
+
+
+#' Calculate logical consistency checks
+#'
+#' We add some flags that check if given value is as expected.
+#' - checks applied:
+#'   - impressions > requests (not logical)
+#'   - requests < 0           (not logical)
+#'   - impressions < 0        (not logical)
+#'   - revenue < 0            (not logical)
+#' 
+#' @param df_ A data frame - imported df.
+#' 
+#' @return df_ A data frame - with checks added.
+#'
+logical_consis_checks <- function(df_){
+  
+  df_ <- df_ %>% 
+    mutate(`f: impressions > requests` = if_else(impressions > requests, 1, 0),
+           `f: requests < 0`           = if_else(requests < 0, 1, 0),
+           `f: impressions < 0`        = if_else(impressions < 0, 1, 0),
+           `f: revenue < 0`            = if_else(revenue < 0, 1, 0))
+  
+  return(df_)
+}
+
   
