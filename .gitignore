@@ -1,6 +1,7 @@
 # Folders
 /test_desc*
 /ppt*
+*/data
 
 # R based files
 *.Rproj
