@@ -63,3 +63,50 @@ col_name_matching <- function(df_,
     print(df.match %>% filter(!matched))
   }
 }
+
+
+#' Report column types
+#'
+#' Extract column names and types from given df and report it.
+#' 
+#' @param df_ A data frame - imported df.
+#' @param data_name_ A string - name of the imported dataset.
+#' 
+#' @return NULL
+#'
+cols_types <- function(df_,
+                       data_name_){
+  
+  df_types <- imap_dfr(df_, ~tibble(
+    col_name = .y,
+    col_type = class(.x)[1]
+  ))
+  
+  cat("\n-----------------------")
+  cat(paste0("\nColumn types - data frame (", data_name_,")"))
+  print(df_types)
+}
+
+
+#' Report missign rows
+#'
+#' Count number of missing rows per each column in df and report it.
+#' 
+#' @param df_ A data frame - imported df.
+#' @param data_name_ A string - name of the imported dataset.
+#' 
+#' @return NULL
+#'
+rows_missing <- function(df_,
+                         data_name_){
+  
+  df_missing <- imap_dfr(df_, ~tibble(
+    col_name = .y,
+    n_missing = sum(is.na(.x))
+  ))
+  
+  cat("\n-----------------------")
+  cat(paste0("\nNumber of missign rows per column - data frame (", data_name_,")"))
+  print(df_missing)
+}
+  

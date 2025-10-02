@@ -41,16 +41,11 @@ df.au_170916 <- read_csv(file = paste0(path_data, file_au_170916), col_names = T
 
 
 
-# Exploratory data analysis (EDA)
-# - EDA is split into multiple parts
-#   - initial data checks
-#   - 
-
-# EDA - Initial checks
+# EDA (Initial checks)
 # - do column names match with expected column names
 # - check column types (any strange column types)
 # - check missing rows
-# - check any strange rows (that do not follow the structure of other rows)
+# - (check any strange rows (that do not follow the structure of other rows))
 
 
 ## column names - match test
@@ -61,5 +56,28 @@ df.cols <- expect_cols_table()
 ### execute matching test (per file)
 col_name_matching(df.sn_170915, "SuperNetwork (SN) - 2017-09-15")
 col_name_matching(df.sn_170916, "SuperNetwork (SN) - 2017-09-16")
-col_name_matching(file_au_170915, "AdUmbrella (AU) - 2017-09-15")
-col_name_matching(file_au_170916, "AdUmbrella (AU) - 2017-09-16")
+col_name_matching(df.au_170915, "AdUmbrella (AU) - 2017-09-15")
+col_name_matching(df.au_170916, "AdUmbrella (AU) - 2017-09-16")
+
+
+## column types - check
+cols_types(df.sn_170915, "SuperNetwork (SN) - 2017-09-15")
+cols_types(df.sn_170916, "SuperNetwork (SN) - 2017-09-16")
+cols_types(df.au_170915, "AdUmbrella (AU) - 2017-09-15")
+cols_types(df.au_170916, "AdUmbrella (AU) - 2017-09-16")
+
+
+## missing rows - check
+rows_missing(df.sn_170915, "SuperNetwork (SN) - 2017-09-15")
+rows_missing(df.sn_170916, "SuperNetwork (SN) - 2017-09-16")
+rows_missing(df.au_170915, "AdUmbrella (AU) - 2017-09-15")
+rows_missing(df.au_170916, "AdUmbrella (AU) - 2017-09-16")
+
+### show missing rows
+df.au_170915 %>% filter(if_any(everything(), is.na))
+df.au_170916 %>% filter(if_any(everything(), is.na))
+
+
+
+# Data pre-processing (before main EDA)
+
