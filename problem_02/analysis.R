@@ -80,4 +80,17 @@ df.au_170916 %>% filter(if_any(everything(), is.na))
 
 
 # Data pre-processing (before main EDA)
+# - before we enter main EDA
+# - we need to apply additional cleaning steps:
+#   - use identical column names over all dfs
+#   - clean revenue column (move currency unit into separate column)
+#   - remove rows with totals 
+#   - convert data column to date type
+
+## apply cleaning (we create new df instance!)
+df.sn_170915.c <- clean_df(df.sn_170915)
+df.sn_170916.c <- clean_df(df.sn_170916)
+df.au_170915.c <- clean_df(df.au_170915)
+df.au_170916.c <- clean_df(df.au_170916)
+
 

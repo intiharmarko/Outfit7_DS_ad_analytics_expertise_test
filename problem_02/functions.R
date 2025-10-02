@@ -109,4 +109,47 @@ rows_missing <- function(df_,
   cat(paste0("\nNumber of missign rows per column - data frame (", data_name_,")"))
   print(df_missing)
 }
+
+
+
+#' Create clean data frame
+#'
+#' We need some pre-processing before entering main EDA stage:
+#   - use identical column names over all dfs
+#   - clean revenue column (move currency unit into separate column)
+#   - remove rows with totals 
+#   - convert date column to date type
+#' 
+#' @param df_ A data frame - imported df.
+#' 
+#' @return df_ A data frame - cleaner version.
+#'
+clean_df <- function(df_){
+  
+  # clean column names
+  colnames(df_) <- colnames(df_) %>% str_to_lower() %>% sub(" .*", "", .)
+  
+  # fix revenue column (currency unit moved to separate column)
+  # - move currency symbol to new column if symbol present
+  # - if currency symbol not present we assume currency is USD
+  # - convert revenue column to numeric
+  df_ <- df_ %>%
+    mutate(
+      currency = str_extract(revenue, "€|\\$|£"),           
+      currency = if_else(is.na(currency), "$", currency),   
+      revenue = str_remove(revenue, "€|\\$|£"),            
+      revenue = as.numeric(revenue)                        
+    ) 
+  
+  # remove final row with totals
+  df_ <- df_ %>% 
+    filter(date != "Totals")
+  
+  # convert date to date type
+  df_ <- df_ %>% 
+    mutate(date = as.Date(date, format = "%d/%m/%Y"))
+  
+  return(df_)
+}
+
   
