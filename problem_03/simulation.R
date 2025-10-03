@@ -17,6 +17,7 @@ library(patchwork)
 
 # Load custom functions
 source("./problem_03/funct_sim.R")
+source("./problem_02/funct_EDA_settings.R")
 
 
 # Paths
@@ -27,8 +28,8 @@ path_fig  <- "./problem_03/fig/"
 comp_prob_fill <-  c(0.10, 0.19, 0.40, 0.45, 0.50) # fill rate (probability) - ad companies
 comp_rev_exp   <- c(10,  5,  4,  3,  5)            # actual expected revenue - ad companies
 nr_comp        <- length(comp_prob_fill)           # number of ad provider companies 
-n_users        <- 100                             # number of users (simulation parameter)
-n_reps         <- 1000                            # number of repetitions (simulation parameter)
+n_users        <- 1000                             # number of users (simulation parameter)
+n_reps         <- 10000                            # number of repetitions (simulation parameter)
 
 ## table: companies
 df.comp <- tibble(id = paste0("C", 1:nr_comp),
@@ -52,6 +53,8 @@ all_company_orders.mat <- permutations(n = nr_comp,
 nr_orders <- nrow(all_company_orders.mat)
 
 ## run estimations (also simulation) 
+set.seed(1123)
+
 df.rez <- map_dfr(seq_len(nr_orders), function(row_i){
   
   # selected orders of ad companies
@@ -98,75 +101,5 @@ df.rez <- add_smart_sort_best_order()
 # - print best company order for each approach and show expected revenue per user
 # - visualize distribution of expected user revenues (approaches 1 and 2) 
 # - and add final result from approach 3 to the mix
+show_final_results()
 
-# extract optimal order and expected revenue per user
-# - for each approach
-# - for smart sort we use values from theoretical expected revenues per users
-a1_order <- df.rez %>% filter(ER_emp_sim_rank == 1) %>% pull(order_ids)
-a1_ER    <- df.rez %>% filter(ER_emp_sim_rank == 1) %>% pull(ER_emp_sim_MC)
-
-a2_order <- df.rez %>% filter(ER_theory_rank == 1) %>% pull(order_ids)
-a2_ER    <- df.rez %>% filter(ER_theory_rank == 1) %>% pull(ER_theory)
-
-a3_order <- df.rez %>% filter(ER_smart_sort_best == 1) %>% pull(order_ids)
-a3_ER    <- df.rez %>% filter(ER_smart_sort_best == 1) %>% pull(ER_theory)
-
-
-# report results
-cat("\n-----------------------")
-cat("\n-----------------------")
-cat(paste0("\nBest ad company order by selected approach!"))
-cat("\n-----------------------")
-cat("\n-----------------------")
-
-cat("\n ")
-cat("\n-----------------------")
-cat(paste0("\nApproach 1: Empirical estimation based on MC simulation (users = ", n_users, " reps = ", n_reps, ")"))
-cat(paste0("\nAd company order: ", a1_order))
-cat(paste0("\nExpected revenue per user: ", a1_ER))
-
-cat("\n ")
-cat("\n-----------------------")
-cat("\nApproach 2: Theoretical estimation based on probability distribution")
-cat(paste0("\nAd company order: ", a2_order))
-cat(paste0("\nExpected revenue per user: ", a2_ER))
-
-cat("\n ")
-cat("\n-----------------------")
-cat("\nApproach 3: Order determined based on smart sort (revenue sort).")
-cat(paste0("\nAd company order: ", a3_order))
-cat(paste0("\nExpected revenue per user: ", a3_ER, " (value used from theoretical expected revenues estimations!)"))
-
-
-# visualize results
-# - show distributions of expected revenues for users for every possible ordering
-# - for approaches 1 and 2
-# - mark selected final company orders
-# - also mark selected final company order based on approach 3
-
-
-p1 <- df.rez %>% 
-  ggplot(aes(x = ER_emp_sim_MC)) +
-  geom_density(color = "black",
-               fill = "deepskyblue4",
-               alpha = 0.1) +
-  scale_x_continuous(breaks = seq(0, 10, 0.1)) +
-  xlab("Expected revenue for user (in USD)") +
-  ylab("Density") +
-  ggtitle("Distribution of expected revenues - Empirical values based on MC simulation") +
-  labs(subtitle = paste0("All possible company orders tested (", nr_orders, " different orders)\nSimulation setting (users = ", n_users, " reps = ", n_reps,")")) +
-  theme_minimal(base_size = 16)
-
-p2 <- df.rez %>% 
-  ggplot(aes(x = ER_theory)) +
-  geom_density(color = "black",
-               fill = "gray70",
-               alpha = 0.1) +
-  scale_x_continuous(breaks = seq(0, 10, 0.1)) +
-  xlab("Expected revenue for user (in USD)") +
-  ylab("Density") +
-  ggtitle("Distribution of expected revenues - Theoretical values based on probabilities") +
-  labs(subtitle = paste0("All possible company orders tested (", nr_orders, " different orders)")) +
-  theme_minimal(base_size = 16)
-
-p1 / p2
