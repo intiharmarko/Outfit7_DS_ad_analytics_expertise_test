@@ -1,6 +1,11 @@
 #' Helper Functions for simulation
 
 
+library(tidyverse)
+library(gtools)
+library(patchwork)
+
+
 
 #' Simulate app querying process - Monte Carlo (MC) simulation
 #' - and estimate empirical expected user revenue (based ons simualtion)
@@ -115,3 +120,39 @@ theor_exp_rev_order <- function(order_idx_,
 
   return(rev_sum)
 }
+
+
+
+#' Determine best order based on smart sort (revenue sort)
+#' - smart sort logic:
+#'   - in this setup (show first available ad, no per-query costs or penalties),
+#'   - the optimal order is simply sorting companies by descending revenue per impression (r).
+#'   - proof: comparing any two companies i and j, the expected revenue difference depends only on (r_i - r_j),
+#'   - so higher-revenue networks must always be placed earlier, regardless of their fill rates.
+#'   
+#' @param df.comp_  A data frame - data about add companies (ids, fill rates, revenues per impression).
+#' @param df.rez_   A data frame - which includes already expected revenue estimation based on simulation and theoretical approach.
+#'
+#' @return df.rez_ A data frame - updated with smart sort results.
+#'
+add_smart_sort_best_order <- function(df.comp_ = df.comp,
+                                      df.rez_ = df.rez){
+  
+  # sort ad companies based on expected revenue per impression
+  # - in descending order (add second order level fill rate also in descending order)
+  # - extract companies ids
+  # - and create company order as string
+  smart_order <- df.comp_ %>%
+    arrange(desc(r), desc(p)) %>%
+    pull(id) %>% 
+    paste(., collapse = " > ")
+  
+  # add smart sort solution to the final results table
+  # - first we match selected order in the table
+  # - and we add flag, which order was selected
+  df.rez_ <- df.rez_ %>% 
+    mutate(ER_smart_sort_best = if_else(order_ids == smart_order, 1, 0))
+  
+  return(df.rez_)
+}
+  

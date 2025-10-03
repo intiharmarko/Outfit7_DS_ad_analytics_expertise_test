@@ -2,9 +2,9 @@
 #
 # - goal: Find optimal sorting order for ads providers companies (based on expected user revenue).
 # - we will demonstrate three different approaches
-#   - empirical: MC simulation (all combinations)
-#   - theoretical estimation (all combinations)
-#   - smart approach (efficient sorting of companies)
+#   - Approach 1: empirical: MC simulation (all combinations)
+#   - Approach 2: theoretical estimation (all combinations)
+#   - Approach 3: smart approach (efficient sorting of companies based on revenues per impression)
 
 rm(list = ls())
 graphics.off()
@@ -13,6 +13,7 @@ graphics.off()
 # Libraries
 library(tidyverse)
 library(gtools)
+library(patchwork)
 
 # Load custom functions
 source("./problem_03/funct_sim.R")
@@ -83,43 +84,89 @@ df.rez <- map_dfr(seq_len(nr_orders), function(row_i){
   mutate(ER_emp_sim_rank = row_number())
 
 
-# Determine best order based on smart sort
-# - smart sort logic:
-#   - in this setup (no per-query cost, ad shown immediately on first success),
-#   - the optimal order is simply to sort companies by revenue per impression (r) in descending order.
-#   - proof: comparing two companies i and j, the difference in expected revenue depends only on (r_i - r_j),
-#   - so higher revenue must always come first, regardless of fill rate
 
-add_smart_sort_best_order <- function(df.comp_ = df.comp,
-                                      )
-
-
-df.comp <- df.comp %>%
-  mutate(score = (p * r) / (1 - p))
-
-smart_ord <- df.comp %>%
-  arrange(desc(score)) %>%
-  pull(id)
-
-smart_sort <- paste(smart_ord, collapse = " > ")
-
-
-df.rez <- df.rez %>% 
-  mutate(ER_smart_sort_best = if_else(order_ids == smart_sort, 1, 0))
+# Determine best order based on smart sort (revenue sort)
+# - this step covers estimation of expected revenue based on approach 3
+# - in this setup (show first available ad, no per-query costs or penalties),
+# - the optimal order is simply sorting companies by descending revenue per impression (r).
+# - we add solution obtained from approach 3 to main results table
+df.rez <- add_smart_sort_best_order()
 
 
 
+# Show results
+# - print best company order for each approach and show expected revenue per user
+# - visualize distribution of expected user revenues (approaches 1 and 2) 
+# - and add final result from approach 3 to the mix
+
+# extract optimal order and expected revenue per user
+# - for each approach
+# - for smart sort we use values from theoretical expected revenues per users
+a1_order <- df.rez %>% filter(ER_emp_sim_rank == 1) %>% pull(order_ids)
+a1_ER    <- df.rez %>% filter(ER_emp_sim_rank == 1) %>% pull(ER_emp_sim_MC)
+
+a2_order <- df.rez %>% filter(ER_theory_rank == 1) %>% pull(order_ids)
+a2_ER    <- df.rez %>% filter(ER_theory_rank == 1) %>% pull(ER_theory)
+
+a3_order <- df.rez %>% filter(ER_smart_sort_best == 1) %>% pull(order_ids)
+a3_ER    <- df.rez %>% filter(ER_smart_sort_best == 1) %>% pull(ER_theory)
 
 
+# report results
+cat("\n-----------------------")
+cat("\n-----------------------")
+cat(paste0("\nBest ad company order by selected approach!"))
+cat("\n-----------------------")
+cat("\n-----------------------")
 
-library(patchwork)
+cat("\n ")
+cat("\n-----------------------")
+cat(paste0("\nApproach 1: Empirical estimation based on MC simulation (users = ", n_users, " reps = ", n_reps, ")"))
+cat(paste0("\nAd company order: ", a1_order))
+cat(paste0("\nExpected revenue per user: ", a1_ER))
+
+cat("\n ")
+cat("\n-----------------------")
+cat("\nApproach 2: Theoretical estimation based on probability distribution")
+cat(paste0("\nAd company order: ", a2_order))
+cat(paste0("\nExpected revenue per user: ", a2_ER))
+
+cat("\n ")
+cat("\n-----------------------")
+cat("\nApproach 3: Order determined based on smart sort (revenue sort).")
+cat(paste0("\nAd company order: ", a3_order))
+cat(paste0("\nExpected revenue per user: ", a3_ER, " (value used from theoretical expected revenues estimations!)"))
+
+
+# visualize results
+# - show distributions of expected revenues for users for every possible ordering
+# - for approaches 1 and 2
+# - mark selected final company orders
+# - also mark selected final company order based on approach 3
+
 
 p1 <- df.rez %>% 
   ggplot(aes(x = ER_emp_sim_MC)) +
-  geom_density()
+  geom_density(color = "black",
+               fill = "deepskyblue4",
+               alpha = 0.1) +
+  scale_x_continuous(breaks = seq(0, 10, 0.1)) +
+  xlab("Expected revenue for user (in USD)") +
+  ylab("Density") +
+  ggtitle("Distribution of expected revenues - Empirical values based on MC simulation") +
+  labs(subtitle = paste0("All possible company orders tested (", nr_orders, " different orders)\nSimulation setting (users = ", n_users, " reps = ", n_reps,")")) +
+  theme_minimal(base_size = 16)
 
 p2 <- df.rez %>% 
   ggplot(aes(x = ER_theory)) +
-  geom_density()
+  geom_density(color = "black",
+               fill = "gray70",
+               alpha = 0.1) +
+  scale_x_continuous(breaks = seq(0, 10, 0.1)) +
+  xlab("Expected revenue for user (in USD)") +
+  ylab("Density") +
+  ggtitle("Distribution of expected revenues - Theoretical values based on probabilities") +
+  labs(subtitle = paste0("All possible company orders tested (", nr_orders, " different orders)")) +
+  theme_minimal(base_size = 16)
 
 p1 / p2
