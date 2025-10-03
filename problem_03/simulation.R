@@ -28,8 +28,8 @@ path_fig  <- "./problem_03/fig/"
 comp_prob_fill <-  c(0.10, 0.19, 0.40, 0.45, 0.50) # fill rate (probability) - ad companies
 comp_rev_exp   <- c(10,  5,  4,  3,  5)            # actual expected revenue - ad companies
 nr_comp        <- length(comp_prob_fill)           # number of ad provider companies 
-n_users        <- 1000                             # number of users (simulation parameter)
-n_reps         <- 10000                            # number of repetitions (simulation parameter)
+n_users        <- 10000                             # number of users (simulation parameter)
+n_reps         <- 1000                            # number of repetitions (simulation parameter)
 
 ## table: companies
 df.comp <- tibble(id = paste0("C", 1:nr_comp),
@@ -101,5 +101,5 @@ df.rez <- add_smart_sort_best_order()
 # - print best company order for each approach and show expected revenue per user
 # - visualize distribution of expected user revenues (approaches 1 and 2) 
 # - and add final result from approach 3 to the mix
-show_final_results()
+show_final_results(); export_fig("01_expected_revenue_user_distribution.png", path_fig)
 
