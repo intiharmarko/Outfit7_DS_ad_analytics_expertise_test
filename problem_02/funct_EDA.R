@@ -76,7 +76,8 @@ plot_num_var_density <- function(df.merged_,
       xlab(paste0(ensym(col_name), " - log10 scale")) +
       ylab("Density") +
       ggtitle(paste("Distribution of", ensym(col_name))) +
-      theme_minimal(base_size = font_base_size_)
+      theme_minimal(base_size = font_base_size_) +
+      theme(strip.text = element_text(size = 10))
     
   } else if(log_scale_ == F){
     df.merged_ %>% 
@@ -89,7 +90,8 @@ plot_num_var_density <- function(df.merged_,
       xlab(paste0(ensym(col_name))) +
       ylab("Density") +
       ggtitle(paste("Distribution of", ensym(col_name))) +
-      theme_minimal(base_size = font_base_size_)
+      theme_minimal(base_size = font_base_size_) +
+      theme(strip.text = element_text(size = 10))
     
   } else{
     message("Please provide boolean value for parameter parameter 'log_scale_'!")
@@ -132,7 +134,8 @@ plot_logical_consistency <- function(df.merged_,
     ylab("Number of violations") +
     ggtitle("Logical inconsistency violations check") +
     labs(subtitle = "Counts above 0 show violations (values that shouldn't exist)!") +
-    theme_minimal(base_size = font_base_size_)
+    theme_minimal(base_size = font_base_size_) +
+    theme(strip.text = element_text(size = 10))
 }
 
 
@@ -153,7 +156,8 @@ plot_distr_fill_rate <- function(df.merged_,
   df.merged_ %>% 
     ggplot(aes(x = fill_rate,
                fill = source)) +
-    geom_density(color = "black") +
+    geom_density(color = "black", 
+                 show.legend = F) +
     facet_wrap(vars(source)) +
     scale_fill_manual(values = cols_sources_) +
     xlab("Fill rate (impressions / requests)") +
@@ -182,7 +186,8 @@ plot_distr_eCPM <- function(df.merged_,
   df.merged_ %>% 
     ggplot(aes(x = eCPM,
                fill = source)) +
-    geom_density(color = "black") +
+    geom_density(color = "black", 
+                 show.legend = F) +
     geom_text(aes(label = currency, 
                   x = 0.5, 
                   y = 0.5), 
@@ -216,7 +221,8 @@ plot_distr_eCPM <- function(df.merged_,
   df.merged_ %>% 
     ggplot(aes(x = eCPM,
                fill = source)) +
-    geom_density(color = "black") +
+    geom_density(color = "black", 
+                 show.legend = F) +
     geom_text(aes(label = currency, 
                   x = 0.5, 
                   y = 0.5), 
