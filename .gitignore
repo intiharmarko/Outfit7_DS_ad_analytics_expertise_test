@@ -2,6 +2,7 @@
 /test_desc*
 /ppt*
 */data
+/report*
 
 # R based files
 *.Rproj
